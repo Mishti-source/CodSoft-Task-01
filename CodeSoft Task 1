@@ -1,0 +1,106 @@
+import tkinter as tk
+from tkinter import messagebox
+import os
+
+# Initialize root window
+root = tk.Tk()
+root.title("Enhanced To-Do List")
+root.geometry("550x500")
+root.configure(bg="#6a0dad")  # Purple background
+
+tasks = []
+
+# File for saving tasks
+TASK_FILE = "tasks.txt"
+
+# -------- Functions --------
+
+def add_task():
+    task = task_field.get().strip()
+    if task == "":
+        messagebox.showinfo("Error", "Task field is empty.")
+    else:
+        tasks.append(task)
+        update_list()
+        task_field.delete(0, tk.END)
+
+def remove_task():
+    try:
+        index = listbox.curselection()[0]
+        del tasks[index]
+        update_list()
+    except IndexError:
+        messagebox.showwarning("Warning", "No task selected.")
+
+def delete_all():
+    if messagebox.askyesno("Confirm", "Delete all tasks?"):
+        tasks.clear()
+        update_list()
+
+def mark_done():
+    try:
+        index = listbox.curselection()[0]
+        tasks[index] = "✔️ " + tasks[index] if not tasks[index].startswith("✔️") else tasks[index]
+        update_list()
+    except IndexError:
+        messagebox.showinfo("Note", "Select a task to mark as done.")
+
+def save_tasks():
+    with open(TASK_FILE, "w") as file:
+        for task in tasks:
+            file.write(task + "\n")
+    messagebox.showinfo("Saved", "Tasks saved successfully.")
+
+def load_tasks():
+    if os.path.exists(TASK_FILE):
+        with open(TASK_FILE, "r") as file:
+            loaded = file.readlines()
+        global tasks
+        tasks = [task.strip() for task in loaded]
+        update_list()
+
+def update_list():
+    listbox.delete(0, tk.END)
+    for task in tasks:
+        listbox.insert(tk.END, task)
+
+def exit_app():
+    if messagebox.askyesno("Exit", "Are you sure you want to quit?"):
+        root.destroy()
+
+# -------- UI Layout --------
+
+title = tk.Label(root, text="TO-DO LIST", font=("Segoe UI", 20, "bold"), bg="#6a0dad", fg="white")
+title.pack(pady=10)
+
+entry_frame = tk.Frame(root, bg="#6a0dad")
+entry_frame.pack(pady=5)
+
+tk.Label(entry_frame, text="Task:", font=("Segoe UI", 12), bg="#6a0dad", fg="white").grid(row=0, column=0, padx=5)
+task_field = tk.Entry(entry_frame, width=35, font=("Segoe UI", 12))
+task_field.grid(row=0, column=1, padx=5)
+
+btn_frame = tk.Frame(root, bg="#6a0dad")
+btn_frame.pack(pady=10)
+
+def styled_btn(text, cmd):
+    return tk.Button(btn_frame, text=text, width=12, bg="#bb86fc", fg="black", font=("Segoe UI", 10, "bold"), command=cmd)
+
+styled_btn("Add", add_task).grid(row=0, column=0, padx=5, pady=5)
+styled_btn("Remove", remove_task).grid(row=0, column=1, padx=5, pady=5)
+styled_btn("Delete All", delete_all).grid(row=0, column=2, padx=5, pady=5)
+styled_btn("Mark Done", mark_done).grid(row=1, column=0, padx=5, pady=5)
+styled_btn("Save", save_tasks).grid(row=1, column=1, padx=5, pady=5)
+styled_btn("Load", load_tasks).grid(row=1, column=2, padx=5, pady=5)
+
+listbox = tk.Listbox(root, height=12, width=50, font=("Segoe UI", 12), selectbackground="#c792ea")
+listbox.pack(pady=10)
+
+exit_btn = tk.Button(root, text="Exit / Close", bg="#ff79c6", fg="black", font=("Segoe UI", 12, "bold"), width=30, command=exit_app)
+exit_btn.pack(pady=10)
+
+# Load previous tasks if any
+load_tasks()
+
+# Start main loop
+root.mainloop()
